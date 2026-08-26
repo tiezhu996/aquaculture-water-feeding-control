@@ -3,7 +3,6 @@ package repository
 import (
 	"aquaculture-water-feeding-control/backend/internal/dto"
 	"aquaculture-water-feeding-control/backend/internal/model"
-	"fmt"
 	"strings"
 
 	"gorm.io/gorm"
@@ -39,10 +38,7 @@ func (r *PondRepository) List(query dto.PageQuery) ([]model.Pond, int64, error) 
 func (r *PondRepository) Get(id uint) (model.Pond, error) {
 	var pond model.Pond
 	err := r.db.First(&pond, id).Error
-	if err != nil {
-		return pond, fmt.Errorf("query pond %d: %v", id, err)
-	}
-	return pond, nil
+	return pond, err
 }
 
 func (r *PondRepository) GetForUpdate(id uint) (model.Pond, error) {

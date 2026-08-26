@@ -70,7 +70,7 @@ func (s *PondService) Create(input dto.PondInput, actor Actor) (model.Pond, erro
 		Status: input.Status, Manager: input.Manager, Notes: input.Notes,
 	}
 	if err := s.repo.Create(&pond); err != nil {
-		if strings.Contains(strings.ToLower(err.Error()), "duplicate") {
+		if IsDuplicatedKey(err) {
 			return model.Pond{}, NewError(CodeConflict, "养殖池编码已存在")
 		}
 		return model.Pond{}, WrapError(CodeInternal, "创建养殖池失败", err)
@@ -109,7 +109,7 @@ func (s *PondService) Update(id uint, input dto.PondInput, actor Actor) (model.P
 	pond.Manager = input.Manager
 	pond.Notes = input.Notes
 	if err := s.repo.Save(&pond); err != nil {
-		if strings.Contains(strings.ToLower(err.Error()), "duplicate") {
+		if IsDuplicatedKey(err) {
 			return model.Pond{}, NewError(CodeConflict, "养殖池编码已存在")
 		}
 		return model.Pond{}, WrapError(CodeInternal, "更新养殖池失败", err)

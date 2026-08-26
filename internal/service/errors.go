@@ -3,6 +3,10 @@ package service
 import (
 	"errors"
 	"fmt"
+	"strings"
+
+	"github.com/jackc/pgx/v5/pgconn"
+	"gorm.io/gorm"
 )
 
 type ErrorCode string
@@ -45,6 +49,25 @@ func AsAppError(err error) (*AppError, bool) {
 	var appErr *AppError
 	ok := errors.As(err, &appErr)
 	return appErr, ok
+}
+
+// IsDuplicatedKey reports whether err represents a unique-constraint violation.
+// It covers the translated gorm error, the raw PostgreSQL unique-violation
+// (SQLSTATE 23505), and the SQLite "UNIQUE constraint failed" text, since the
+// SQLite driver does not always translate into gorm.ErrDuplicatedKey.
+func IsDuplicatedKey(err error) bool {
+	if err == nil {
+		return false
+	}
+	if errors.Is(err, gorm.ErrDuplicatedKey) {
+		return true
+	}
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+		return true
+	}
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "duplicate") || strings.Contains(msg, "unique constraint")
 }
 
 type Actor struct {
