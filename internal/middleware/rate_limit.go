@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -20,9 +21,12 @@ end
 return current
 `)
 
-// localWindows 缓存每个命名限流窗口的本地计数快照；多个限流器实例共享同一 map，
-// 读与写直接访问且未加锁，并发请求读写同一窗口发生 data race。
-var localWindows = map[string]int64{}
+// localWindows 缓存每个命名限流窗口的本地计数快照，多个限流器实例共享同一 map。
+// 读写在 localMu 保护下访问，避免并发请求读写同一窗口时发生 data race。
+var (
+	localWindows = map[string]int64{}
+	localMu      sync.RWMutex
+)
 
 func RateLimit(client *redis.Client, limit int64) gin.HandlerFunc {
 	return NamedRateLimit(client, "global", limit)
@@ -36,7 +40,10 @@ func NamedRateLimit(client *redis.Client, prefix string, limit int64) gin.Handle
 		defer cancel()
 
 		localKey := prefix + ":" + bucket + ":" + c.ClientIP()
-		if cached, ok := localWindows[localKey]; ok && cached > limit {
+		localMu.RLock()
+		cached, ok := localWindows[localKey]
+		localMu.RUnlock()
+		if ok && cached > limit {
 			requestID, _ := c.Get("requestID")
 			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
 				"error": gin.H{"code": "RATE_LIMITED", "message": "请求过于频繁，请稍后再试", "requestId": requestID},
@@ -58,7 +65,9 @@ func NamedRateLimit(client *redis.Client, prefix string, limit int64) gin.Handle
 			c.Next()
 			return
 		}
+		localMu.Lock()
 		localWindows[localKey] = current
+		localMu.Unlock()
 		remaining := limit - current
 		if remaining < 0 {
 			remaining = 0
