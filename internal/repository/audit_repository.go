@@ -3,9 +3,7 @@ package repository
 import (
 	"aquaculture-water-feeding-control/backend/internal/dto"
 	"aquaculture-water-feeding-control/backend/internal/model"
-	"errors"
 
-	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/gorm"
 )
 
@@ -23,15 +21,18 @@ func (r *AuditRepository) Transaction(fn func(*gorm.DB) error) (err error) {
 		return tx.Error
 	}
 	defer func() {
-		err = tx.Commit().Error
+		if p := recover(); p != nil {
+			_ = tx.Rollback()
+			panic(p)
+		}
+		if err != nil {
+			_ = tx.Rollback()
+		} else {
+			err = tx.Commit().Error
+		}
 	}()
 	err = fn(tx)
 	return err
-}
-
-func retryableTransactionError(err error) bool {
-	var pgErr *pgconn.PgError
-	return errors.As(err, &pgErr) && (pgErr.Code == "40001" || pgErr.Code == "40P01")
 }
 
 func (r *AuditRepository) Create(log *model.AuditLog) error {

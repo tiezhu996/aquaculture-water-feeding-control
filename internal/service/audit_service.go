@@ -15,8 +15,7 @@ type AuditService struct {
 
 func (s *AuditService) WithinTransaction(fn func(*gorm.DB, *AuditService) error) error {
 	return s.repo.Transaction(func(tx *gorm.DB) error {
-		fn(tx, NewAuditService(repository.NewAuditRepository(tx)))
-		return nil
+		return fn(tx, NewAuditService(repository.NewAuditRepository(tx)))
 	})
 }
 
