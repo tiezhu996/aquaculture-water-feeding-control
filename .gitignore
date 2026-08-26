@@ -1,0 +1,10 @@
+.env.local
+.DS_Store
+backend/aquaculture-api
+backend/api
+backend/coverage.out
+frontend/node_modules/
+frontend/dist/
+frontend/vite.config.js
+frontend/vite.config.d.ts
+*.log
