@@ -1,0 +1,27 @@
+{
+  "name": "aquaculture-water-feeding-control-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview --host 0.0.0.0"
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "^2.3.1",
+    "axios": "^1.7.7",
+    "element-plus": "^2.8.4",
+    "pinia": "^2.2.4",
+    "vue": "^3.5.12",
+    "vue-router": "^4.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "@vitejs/plugin-vue": "^5.1.4",
+    "@vue/tsconfig": "^0.5.1",
+    "typescript": "~5.6.3",
+    "vite": "^5.4.10",
+    "vue-tsc": "^2.1.8"
+  }
+}
