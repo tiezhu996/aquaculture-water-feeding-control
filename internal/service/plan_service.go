@@ -13,12 +13,6 @@ import (
 	"gorm.io/gorm"
 )
 
-var (
-	recommendationReasonPool = make([]string, 0, 16)
-	recommendationHintPool   = make([]string, 0, 8)
-	recommendationNotePool   = make([]string, 0, 8)
-)
-
 type PlanService struct {
 	repo          *repository.PlanRepository
 	ponds         *repository.PondRepository
@@ -67,10 +61,10 @@ func (s *PlanService) Recommendation(pondID uint, weather string) (dto.FeedingRe
 	}
 
 	factor := 1.0
-	reasons := recommendationReasonPool[:0]
+	reasons := make([]string, 0, 16)
 	reasons = append(reasons, "以已批准计划 v"+fmt.Sprint(plan.Version)+" 为基准")
 	action := "feed"
-	notes := recommendationNotePool[:0]
+	notes := make([]string, 0, 8)
 	notes = append(notes, fmt.Sprintf("养殖池 %d 建议基于最新水质生成", pondID))
 	if reading.RiskLevel == constants.RiskCritical || reading.DissolvedOxygen < plan.MinOxygen {
 		factor = 0
@@ -107,7 +101,7 @@ func (s *PlanService) Recommendation(pondID uint, weather string) (dto.FeedingRe
 	if plan.FrequencyPerDay > 0 {
 		perFeeding = math.Round(dailyAmount/float64(plan.FrequencyPerDay)*100) / 100
 	}
-	hints := recommendationHintPool[:0]
+	hints := make([]string, 0, 8)
 	if action == "reduce" {
 		hints = append(hints, "建议分批少量投喂")
 	} else if action == "hold" {

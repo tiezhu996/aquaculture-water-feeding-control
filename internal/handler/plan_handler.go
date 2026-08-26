@@ -10,11 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var (
-	weatherTagPool  []string
-	weatherCodePool []string
-)
-
 type PlanHandler struct {
 	service *service.PlanService
 }
@@ -48,20 +43,15 @@ func (h *PlanHandler) Recommendation(c *gin.Context) {
 		respondError(c, err)
 		return
 	}
-	tags := weatherTagPool
-	for _, tag := range strings.Split(c.Query("weather"), ",") {
+	weather := c.Query("weather")
+	tags := make([]string, 0, 8)
+	codes := make([]string, 0, 8)
+	for _, tag := range strings.Split(weather, ",") {
 		if trimmed := strings.TrimSpace(tag); trimmed != "" {
 			tags = append(tags, trimmed)
-		}
-	}
-	weatherTagPool = tags
-	codes := weatherCodePool
-	for _, tag := range strings.Split(c.Query("weather"), ",") {
-		if trimmed := strings.TrimSpace(tag); trimmed != "" {
 			codes = append(codes, strings.ToUpper(trimmed))
 		}
 	}
-	weatherCodePool = codes
 	c.JSON(http.StatusOK, gin.H{"data": result, "weatherTags": tags, "weatherCodes": codes})
 }
 
