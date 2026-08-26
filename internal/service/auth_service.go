@@ -3,6 +3,7 @@ package service
 import (
 	"aquaculture-water-feeding-control/backend/internal/dto"
 	"aquaculture-water-feeding-control/backend/internal/repository"
+	"errors"
 	"fmt"
 	"time"
 
@@ -32,7 +33,7 @@ func NewAuthService(users *repository.UserRepository, secret string, ttl time.Du
 func (s *AuthService) Login(input dto.LoginRequest) (dto.LoginResponse, error) {
 	user, err := s.users.FindByUsername(input.Username)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return dto.LoginResponse{}, NewError(CodeUnauthorized, "用户名或密码错误")
 		}
 		return dto.LoginResponse{}, WrapError(CodeInternal, "查询用户失败", err)
@@ -88,7 +89,7 @@ func (s *AuthService) ParseToken(raw string) (TokenClaims, error) {
 func (s *AuthService) Me(userID uint) (dto.UserResponse, error) {
 	user, err := s.users.FindByID(userID)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return dto.UserResponse{}, NewError(CodeNotFound, "用户不存在")
 		}
 		return dto.UserResponse{}, WrapError(CodeInternal, "查询用户失败", err)
